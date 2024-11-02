@@ -55,9 +55,9 @@ class EquipoAdmin(admin.ModelAdmin):
 # Registrar el modelo ManoObra
 @admin.register(ManoObra)
 class ManoObraAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'salario_minimo', 'numero_de_contacto')
-    search_fields = ('nombre',)
-    list_filter = ('salario_minimo',)
+    list_display = ( 'cargo','salario_minimo', 'numero_de_contacto')
+    search_fields = ('nombre', 'cargo')
+    list_filter = ('salario_minimo', 'cargo')
 
 
 # Inline para RubroMaterial

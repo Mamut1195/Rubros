@@ -157,7 +157,7 @@ class RubroEquipo(models.Model):
 
 # Modelo para Mano de Obra
 class ManoObra(models.Model):
-    nombre = models.CharField(max_length=255)
+    cargo = models.CharField(max_length=15, blank=True, null=True)
     salario_minimo = models.ForeignKey(SalarioMinimo, on_delete=models.SET_NULL, null=True)
     numero_de_contacto = models.CharField(max_length=15, blank=True, null=True)
 
@@ -166,7 +166,7 @@ class ManoObra(models.Model):
         verbose_name_plural = "Mano de obra"
 
     def __str__(self):
-        return f"{self.nombre} - {self.salario_minimo.cargo} "
+        return f"{self.salario_minimo.cargo} "
 
 # Modelo intermedio para calcular costos de mano de obra en el rubro
 class RubroManoObra(models.Model):
