@@ -114,47 +114,6 @@ class RubroHerramienta(models.Model):
         return self.cantidad_requerida * self.herramienta.costo_por_unidad
 
 
-# Modelo para Equipos
-class Equipo(models.Model):
-    nombre = models.CharField(max_length=255)
-    cantidad = models.PositiveIntegerField()
-    estado = models.CharField(max_length=50, choices=[('O', 'Operativo'), ('M', 'Mantenimiento'), ('R', 'Reparación')], default='O')
-    fecha_compra = models.DateField(blank=True, null=True)
-    marca = models.CharField(max_length=100, blank=True, null=True)
-    codigo_unico = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    # Campos adicionales para el alquiler
-    es_alquilado = models.BooleanField(default=False)
-    costo_alquiler = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    tipo_alquiler = models.CharField(max_length=10, choices=[('H', 'Hora'), ('D', 'Día')], blank=True, null=True)
-
-    def __str__(self):
-        alquiler_info = f" (Alquilado: {self.costo_alquiler} por {self.get_tipo_alquiler_display()})" if self.es_alquilado else ""
-        return f"{self.nombre} - {self.cantidad} en estado {self.get_estado_display()}{alquiler_info}"
-
-# Modelo intermedio para calcular costos de equipos en el rubro
-class RubroEquipo(models.Model):
-    rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
-    equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE)
-    cantidad_requerida = models.PositiveIntegerField()
-
-    @property
-    def costo_unitario(self):
-        if self.equipo.es_alquilado:
-            return self.equipo.costo_alquiler
-        else:
-            return 0  # Si no es alquilado y no se maneja costo de uso, retornar 0
-    
-    @property
-    def costo_total(self):
-        if self.equipo.es_alquilado:
-            if self.equipo.tipo_alquiler == 'H':  # Costo por hora
-                return self.equipo.costo_alquiler * self.cantidad_requerida
-            elif self.equipo.tipo_alquiler == 'D':  # Costo por día
-                return self.equipo.costo_alquiler * self.cantidad_requerida
-        return 0  # Si no está alquilado o no hay un costo adicional
-
-
 # Modelo para Mano de Obra
 class ManoObra(models.Model):
     cargo = models.CharField(max_length=15, blank=True, null=True)
