@@ -85,19 +85,13 @@ class RubroMaterial(models.Model):
 
 
 # Modelo para Herramientas
-# Modelo para Herramientas
 class Herramienta(models.Model):
     nombre = models.CharField(max_length=255)
     cantidad = models.PositiveIntegerField()
-    estado = models.CharField(max_length=50, choices=[('N', 'Nuevo'), ('U', 'Usado'), ('R', 'Reparación')], default='N')
-    fecha_compra = models.DateField(blank=True, null=True)
-    marca = models.CharField(max_length=100, blank=True, null=True)
-    codigo_unico = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    costo = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"{self.nombre} - {self.cantidad} disponibles"
+        return f"{self.nombre}"
 
 # Modelo intermedio para calcular costos de herramientas en el rubro
 class RubroHerramienta(models.Model):

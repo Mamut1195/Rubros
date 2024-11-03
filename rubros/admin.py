@@ -33,13 +33,9 @@ class MaterialAdmin(admin.ModelAdmin):
 # Registrar el modelo Herramienta
 @admin.register(Herramienta)
 class HerramientaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'cantidad', 'estado', 'fecha_compra', 'marca', 'codigo_unico', )
-    search_fields = ('nombre', 'marca')
-    list_filter = ('estado', 'marca')
-
-    class Media:
-        js = ('js/herramienta_admin.js',)
-
+    list_display = ('nombre', 'cantidad', 'costo_por_unidad',)
+    search_fields = ('nombre', )
+    list_filter = ('nombre',)
 
 # Registrar el modelo ManoObra
 @admin.register(ManoObra)
