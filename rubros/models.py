@@ -49,8 +49,6 @@ class Material(models.Model):
     nombre = models.CharField(max_length=255)
     cantidad = models.DecimalField(max_digits=10, decimal_places=2)
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
-    costo_de_cantidad = models.DecimalField(max_digits=10, decimal_places=2)
-    proveedor = models.CharField(max_length=255, blank=True, null=True)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, editable=True, verbose_name="Costo unitario", default=0.00)
 
     class Meta:
@@ -60,14 +58,6 @@ class Material(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - {self.unidad}"
-
-    def save(self, *args, **kwargs):
-        # Calcular el costo unitario como división de costo_de_cantidad entre cantidad
-        if self.cantidad > 0 and self.costo_de_cantidad > 0:
-            self.costo_por_unidad = self.costo_de_cantidad / self.cantidad
-        else:
-            self.costo_por_unidad = 0
-        super().save(*args, **kwargs)
 
 # Modelo intermedio para calcular costos de materiales en el rubro
 class RubroMaterial(models.Model):

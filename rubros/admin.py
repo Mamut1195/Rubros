@@ -26,9 +26,9 @@ class UnidadAdmin(admin.ModelAdmin):
 # Registrar el modelo Material
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'unidad', 'cantidad', 'costo_de_cantidad', 'proveedor', 'costo_por_unidad')
-    search_fields = ('nombre', 'proveedor')
-    list_filter = ('proveedor', 'unidad')
+    list_display = ('nombre', 'unidad', 'cantidad', 'costo_por_unidad')
+    search_fields = ('nombre',)
+    list_filter = ('unidad', 'nombre')
 
 # Registrar el modelo Herramienta
 @admin.register(Herramienta)
