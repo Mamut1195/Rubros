@@ -47,7 +47,6 @@ class Rubro(models.Model):
 # Modelo para Materiales
 class Material(models.Model):
     nombre = models.CharField(max_length=255)
-    cantidad = models.DecimalField(max_digits=10, decimal_places=2)
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, editable=True, verbose_name="Costo unitario", default=0.00)
 
@@ -57,7 +56,7 @@ class Material(models.Model):
         ordering = ['nombre']  # Ordena por el campo 'nombre'
 
     def __str__(self):
-        return f"{self.nombre} - {self.unidad}"
+        return f"{self.nombre} "
 
 # Modelo intermedio para calcular costos de materiales en el rubro
 class RubroMaterial(models.Model):
@@ -77,8 +76,9 @@ class RubroMaterial(models.Model):
 # Modelo para Herramientas
 class Herramienta(models.Model):
     nombre = models.CharField(max_length=255)
-    cantidad = models.PositiveIntegerField()
+    unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
 
     def __str__(self):
         return f"{self.nombre}"
