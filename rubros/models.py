@@ -25,23 +25,6 @@ class Unidad(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.abreviatura})"
 
-# Modelo para Rubros de Construcción
-class Rubro(models.Model):
-    nombre = models.CharField(max_length=255)
-    descripcion = models.TextField(blank=True, null=True)
-    codigo = models.CharField(max_length=50, unique=True, blank=True)
-    codigo_personalizado = models.CharField(max_length=50, blank=True, null=True)
-    unidad = models.ForeignKey('Unidad', on_delete=models.SET_NULL, null=True) 
-
-    #Método para sumar todos los costos de RubroMaterial
-    def calcular_costo_total_rubros(self):
-        total = 0
-        for rubro_material in self.rubromaterial_set.all():
-            total += rubro_material.costo_total
-        return total
-
-    def __str__(self):
-        return self.nombre
 
 
 # Modelo para Materiales
@@ -58,20 +41,6 @@ class Material(models.Model):
     def __str__(self):
         return f"{self.nombre} "
 
-# Modelo intermedio para calcular costos de materiales en el rubro
-class RubroMaterial(models.Model):
-    rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
-    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
-
-    @property
-    def costo_unitario(self):
-        return self.material.costo_por_unidad
-    
-    @property
-    def costo_total(self):
-        return self.cantidad_requerida * self.material.costo_por_unidad
-
 
 # Modelo para Herramientas
 class Herramienta(models.Model):
@@ -82,20 +51,6 @@ class Herramienta(models.Model):
 
     def __str__(self):
         return f"{self.nombre}"
-
-# Modelo intermedio para calcular costos de herramientas en el rubro
-class RubroHerramienta(models.Model):
-    rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
-    herramienta = models.ForeignKey(Herramienta, on_delete=models.CASCADE)
-    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
-
-    @property
-    def costo_unitario(self):
-        return self.herramienta.costo_por_unidad
-    
-    @property
-    def costo_total(self):
-        return self.cantidad_requerida * self.herramienta.costo_por_unidad
 
 
 # Modelo para Mano de Obra
@@ -111,6 +66,59 @@ class ManoObra(models.Model):
     def __str__(self):
         return f"{self.salario_minimo.cargo} "
 
+
+# Modelo para Rubros de Construcción
+class Rubro(models.Model):
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    codigo = models.CharField(max_length=50, unique=True, blank=True)
+    codigo_personalizado = models.CharField(max_length=50, blank=True, null=True)
+    unidad = models.ForeignKey('Unidad', on_delete=models.SET_NULL, null=True) 
+
+
+    # Método para calcular el costo total de todos los materiales relacionados
+    def calcular_costo_total_materiales(self):
+        return sum(material.costo_total for material in self.rubromaterial_set.all())
+
+        # Método para calcular el costo total de todos las herramientas relacionadas
+    def calcular_costo_total_herramientas(self):
+        return sum(herramienta.costo_total for herramienta in self.rubroherramienta_set.all())
+
+            # Método para calcular el costo total de todos las herramientas relacionadas
+    def calcular_costo_total_mano_de_obra(self):
+        return sum(manoobra.costo_total for manoobra in self.rubromanoobra_set.all())
+    
+    def __str__(self):
+        return self.nombre
+
+# Modelo intermedio para calcular costos de materiales en el rubro
+class RubroMaterial(models.Model):
+    rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
+    material = models.ForeignKey(Material, on_delete=models.CASCADE)
+    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
+
+    @property
+    def costo_unitario(self):
+        return self.material.costo_por_unidad
+    
+    @property
+    def costo_total(self):
+        return self.cantidad_requerida * self.material.costo_por_unidad
+
+# Modelo intermedio para calcular costos de herramientas en el rubro
+class RubroHerramienta(models.Model):
+    rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
+    herramienta = models.ForeignKey(Herramienta, on_delete=models.CASCADE)
+    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
+
+    @property
+    def costo_unitario(self):
+        return self.herramienta.costo_por_unidad
+    
+    @property
+    def costo_total(self):
+        return self.cantidad_requerida * self.herramienta.costo_por_unidad
+
 # Modelo intermedio para calcular costos de mano de obra en el rubro
 class RubroManoObra(models.Model):
     rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
@@ -123,4 +131,4 @@ class RubroManoObra(models.Model):
     
     @property
     def costo_total(self):
-        return self.cantidad_horas_requeridas * self.mano_obra.salario_minimo.salario_horario_minimo
+        return self.cantidad_horas_requeridas * self.costo_unitario
