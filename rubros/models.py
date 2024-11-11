@@ -74,6 +74,8 @@ class Rubro(models.Model):
     codigo = models.CharField(max_length=50, unique=True, blank=True)
     codigo_personalizado = models.CharField(max_length=50, blank=True, null=True)
     unidad = models.ForeignKey('Unidad', on_delete=models.SET_NULL, null=True) 
+    indirectos = models.DecimalField(max_digits=5, decimal_places=2, default=20.00,
+                                      verbose_name="Indirectos (%)")
 
 
     # Método para calcular el costo total de todos los materiales relacionados

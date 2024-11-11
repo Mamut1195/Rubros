@@ -107,7 +107,7 @@ class RubroManoObraInline(admin.TabularInline):
 @admin.register(Rubro)
 class RubroAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'codigo', 'codigo_personalizado', 'descripcion', 'unidad', 'get_costo_total_materiales', 
-    'get_costo_total_herramientas', 'get_costo_total_mano_de_obra',)
+    'get_costo_total_herramientas', 'get_costo_total_mano_de_obra', 'indirectos',)
     search_fields = ('nombre', 'codigo', 'codigo_personalizado', 'get_costo_total_mano_de_obra',)
     list_filter = ('codigo',)
     readonly_fields = ('get_costo_total_materiales', 'get_costo_total_herramientas','get_costo_total_mano_de_obra',)
@@ -131,12 +131,14 @@ class RubroAdmin(admin.ModelAdmin):
 
     get_costo_total_mano_de_obra.short_description = 'Costo Total Mano de obra'
 
-    # Pasar el costo total al JavaScript mediante un campo oculto
-    def changelist_view(self, request, extra_context=None):
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        obj = self.get_object(request, object_id)
         extra_context = extra_context or {}
-        extra_context['total_costo_materiales'] = self.get_costo_total_materiales(self)
-        return super().changelist_view(request, extra_context=extra_context)
-
+        if obj:
+            extra_context['total_costo_materiales'] = obj.calcular_costo_total_materiales()
+            extra_context['total_costo_herramientas'] = obj.calcular_costo_total_herramientas()
+            extra_context['total_costo_mano_obra'] = obj.calcular_costo_total_mano_de_obra()
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
     class Media:
-        js = ('js/rubromateriales.js',)
+        js = ('js/rubromateriales.js', 'js/rubroherramientas.js', 'js/rubromanodeobra.js', 'js/costo_total_rubro.js')
