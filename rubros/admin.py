@@ -10,6 +10,8 @@ from .models import (
     RubroHerramienta,
     RubroManoObra
 )
+# from inventario_de_obra.admin import EntradaInventarioInline, SalidaInventarioInline  # Import the inlines
+
 
 # Registrar el modelo SalarioMinimo
 @admin.register(SalarioMinimo)
@@ -29,6 +31,11 @@ class MaterialAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'unidad', 'costo_por_unidad')
     search_fields = ('nombre',)
     list_filter = ('unidad', 'nombre')
+#     inlines = [EntradaInventarioInline, SalidaInventarioInline] 
+
+# # Re-register Material with the updated MaterialAdmin configuration
+# admin.site.unregister(Material)  # Unregister the original admin registration
+# admin.site.register(Material, MaterialAdmin)  # Register with the updated admin
 
 # Registrar el modelo Herramienta
 @admin.register(Herramienta)
