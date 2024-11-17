@@ -11,6 +11,7 @@ from .models import (
     RubroManoObra
 )
 # from inventario_de_obra.admin import EntradaInventarioInline, SalidaInventarioInline  # Import the inlines
+from django import forms
 
 
 # Registrar el modelo SalarioMinimo
@@ -19,9 +20,32 @@ class SalarioMinimoAdmin(admin.ModelAdmin):
     list_display = ('cargo', 'salario_horario_minimo')
     search_fields = ('cargo',)
 
+class UnidadForm(forms.ModelForm):
+    class Meta:
+        model = Unidad
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        nombre = cleaned_data.get('nombre')
+        abreviatura = cleaned_data.get('abreviatura')
+
+        if nombre:
+            # Comparar ignorando mayúsculas y minúsculas
+            if Unidad.objects.exclude(id=self.instance.id).filter(nombre__iexact=nombre).exists():
+                self.add_error('nombre', 'Ya existe una unidad con este nombre (ignora mayúsculas/minúsculas).')
+
+        if abreviatura:
+            # Comparar ignorando mayúsculas y minúsculas
+            if Unidad.objects.exclude(id=self.instance.id).filter(abreviatura__iexact=abreviatura).exists():
+                self.add_error('abreviatura', 'Ya existe una unidad con esta abreviatura (ignora mayúsculas/minúsculas).')
+
+        return cleaned_data
+    
 # Registrar el modelo Unidad
 @admin.register(Unidad)
 class UnidadAdmin(admin.ModelAdmin):
+    form = UnidadForm
     list_display = ('nombre', 'abreviatura')
     search_fields = ('nombre', 'abreviatura')
 

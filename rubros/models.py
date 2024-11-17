@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.core.exceptions import ValidationError
 
 # Modelo para Salarios Mínimos por Ley
 class SalarioMinimo(models.Model):
@@ -21,6 +22,21 @@ class Unidad(models.Model):
     class Meta:
         verbose_name = "Unidad"
         verbose_name_plural = "Unidades"
+
+    def clean(self):
+        # Validar que no exista otra unidad con el mismo nombre o abreviatura
+        if Unidad.objects.exclude(id=self.id).filter(nombre=self.nombre).exists():
+            raise ValidationError({'nombre': 'Ya existe una unidad con este nombre.'})
+        if self.abreviatura and Unidad.objects.exclude(id=self.id).filter(abreviatura=self.abreviatura).exists():
+            raise ValidationError({'abreviatura': 'Ya existe una unidad con esta abreviatura.'})
+
+    def save(self, *args, **kwargs):
+        # Convertir a minúsculas antes de guardar
+        if self.nombre:
+            self.nombre = self.nombre.lower()
+        if self.abreviatura:
+            self.abreviatura = self.abreviatura.lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nombre} ({self.abreviatura})"

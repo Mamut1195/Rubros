@@ -5,6 +5,7 @@ from django.contrib import admin
 from .models import Inventario, EntradaInventario, SalidaInventario
 
 
+
 # # Inline para mostrar Entradas de Inventario dentro de la vista del Material en el inventario
 # class EntradaInventarioInline(admin.TabularInline):
 #     model = EntradaInventario
@@ -71,5 +72,6 @@ class InventarioAdmin(admin.ModelAdmin):
         return obj.material.unidad.abreviatura if obj.material.unidad else ""
     
     get_unidad.short_description = 'Unidad'
+
 
 
