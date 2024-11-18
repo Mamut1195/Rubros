@@ -1,6 +1,8 @@
 from django.db import models
 import uuid
 from django.core.exceptions import ValidationError
+import re
+from unidecode import unidecode 
 
 # Modelo para Salarios Mínimos por Ley
 class SalarioMinimo(models.Model):
@@ -24,18 +26,22 @@ class Unidad(models.Model):
         verbose_name_plural = "Unidades"
 
     def clean(self):
-        # Validar que no exista otra unidad con el mismo nombre o abreviatura
+        # Limpieza de espacios, normalización y eliminación de tildes
+        self.nombre = unidecode(re.sub(r'\s+', ' ', self.nombre.strip().lower()))  # Normaliza y elimina espacios y tildes
+        if self.abreviatura:
+            self.abreviatura = unidecode(re.sub(r'\s+', ' ', self.abreviatura.strip().lower()))  # Normaliza y elimina espacios y tildes
+
+        # Validar unicidad del nombre
         if Unidad.objects.exclude(id=self.id).filter(nombre=self.nombre).exists():
             raise ValidationError({'nombre': 'Ya existe una unidad con este nombre.'})
+
+        # Validar unicidad de la abreviatura (si está presente)
         if self.abreviatura and Unidad.objects.exclude(id=self.id).filter(abreviatura=self.abreviatura).exists():
             raise ValidationError({'abreviatura': 'Ya existe una unidad con esta abreviatura.'})
 
     def save(self, *args, **kwargs):
-        # Convertir a minúsculas antes de guardar
-        if self.nombre:
-            self.nombre = self.nombre.lower()
-        if self.abreviatura:
-            self.abreviatura = self.abreviatura.lower()
+        # Llama a clean para garantizar que se apliquen las validaciones antes de guardar
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -53,9 +59,26 @@ class Material(models.Model):
         verbose_name = "Material"
         verbose_name_plural = "Materiales"
         ordering = ['nombre']  # Ordena por el campo 'nombre'
+    
+    def clean(self):
+        # Limpieza de espacios, normalización y eliminación de tildes
+        cleaned_name = re.sub(r'\s+', ' ', self.nombre.strip())  # Elimina espacios extra
+        normalized_name = unidecode(cleaned_name).capitalize()  # Elimina tildes y normaliza como título
+
+        # Verifica unicidad insensible a mayúsculas/minúsculas, tildes y espacios
+        if Material.objects.filter(nombre__iexact=normalized_name).exclude(pk=self.pk).exists():
+            raise ValidationError(f"Ya existe un material con el nombre '{normalized_name}'.")
+
+        # Asigna el nombre limpio y normalizado
+        self.nombre = normalized_name
+
+    def save(self, *args, **kwargs):
+        # Normalizar el texto del nombre
+        self.full_clean()  # Llama a clean() para aplicar validaciones antes de guardar
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.nombre} "
+        return self.nombre
 
 
 # Modelo para Herramientas
@@ -64,10 +87,8 @@ class Herramienta(models.Model):
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
-
     def __str__(self):
         return f"{self.nombre}"
-
 
 # Modelo para Mano de Obra
 class ManoObra(models.Model):
