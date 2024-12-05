@@ -1,8 +1,8 @@
 from django.db import models
-import uuid
 from django.core.exceptions import ValidationError
 import re
 from unidecode import unidecode 
+import unicodedata
 
 # Modelo para Salarios Mínimos por Ley
 class SalarioMinimo(models.Model):
@@ -26,10 +26,12 @@ class Unidad(models.Model):
         verbose_name_plural = "Unidades"
 
     def clean(self):
-        # Limpieza de espacios, normalización y eliminación de tildes
-        self.nombre = unidecode(re.sub(r'\s+', ' ', self.nombre.strip().lower()))  # Normaliza y elimina espacios y tildes
+        # Limpieza y normalización del nombre
+        self.nombre = unidecode(re.sub(r'\s+', ' ', self.nombre.strip())).title()  # Normaliza, elimina espacios extra, y convierte a título
+
+        # Limpieza y normalización de la abreviatura
         if self.abreviatura:
-            self.abreviatura = unidecode(re.sub(r'\s+', ' ', self.abreviatura.strip().lower()))  # Normaliza y elimina espacios y tildes
+            self.abreviatura = unidecode(re.sub(r'\s+', ' ', self.abreviatura.strip().lower()))  # Normaliza, elimina espacios extra, y convierte a minúsculas
 
         # Validar unicidad del nombre
         if Unidad.objects.exclude(id=self.id).filter(nombre=self.nombre).exists():
@@ -43,11 +45,6 @@ class Unidad(models.Model):
         # Llama a clean para garantizar que se apliquen las validaciones antes de guardar
         self.full_clean()
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.nombre} ({self.abreviatura})"
-
-
 
 # Modelo para Materiales
 class Material(models.Model):
@@ -87,6 +84,33 @@ class Herramienta(models.Model):
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
     costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
+    class Meta:
+        verbose_name = "Herramienta"
+        verbose_name_plural = "Herramientas"
+        ordering = ['nombre']
+
+    def clean(self):
+        # Normaliza el nombre eliminando tildes y espacios extra
+        self.nombre = self._normalize_text(self.nombre)
+
+        # Validar unicidad del nombre normalizado
+        if Herramienta.objects.exclude(id=self.id).filter(nombre__iexact=self.nombre).exists():
+            raise ValidationError({'nombre': 'Ya existe una herramienta con este nombre.'})
+
+    def save(self, *args, **kwargs):
+        # Llama a clean para garantizar que se apliquen las validaciones antes de guardar
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def _normalize_text(self, text):
+        """
+        Normaliza un texto eliminando tildes y espacios extra,
+        y convirtiéndolo a formato título.
+        """
+        text = re.sub(r'\s+', ' ', text.strip())  # Elimina espacios extra
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')  # Elimina tildes
+        return text.title()  # Devuelve el texto en formato título
+
     def __str__(self):
         return f"{self.nombre}"
 
@@ -96,12 +120,36 @@ class ManoObra(models.Model):
     salario_minimo = models.ForeignKey(SalarioMinimo, on_delete=models.SET_NULL, null=True)
     numero_de_contacto = models.CharField(max_length=15, blank=True, null=True)
 
-    class Meta:
-        verbose_name = "Mano de obra"
-        verbose_name_plural = "Mano de obra"
+
+    def clean(self):
+        # Normaliza el texto del cargo eliminando tildes y espacios extra
+        if self.cargo:
+            self.cargo = self._normalize_text(self.cargo)
+
+        # Verifica unicidad del cargo normalizado
+        if self.cargo and ManoObra.objects.exclude(id=self.id).filter(cargo__iexact=self.cargo).exists():
+            raise ValidationError({'cargo': 'Ya existe un registro de mano de obra con este cargo.'})
+
+        # Valida el formato del número de contacto (solo dígitos y longitud entre 7 y 15 caracteres)
+        if self.numero_de_contacto and not re.match(r'^\d{7,15}$', self.numero_de_contacto):
+            raise ValidationError({'numero_de_contacto': 'El número de contacto debe contener entre 7 y 15 dígitos.'})
+
+    def save(self, *args, **kwargs):
+        # Llama a clean para garantizar que las validaciones se apliquen antes de guardar
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def _normalize_text(self, text):
+        """
+        Normaliza un texto eliminando tildes, espacios extra,
+        y convierte el texto a formato título.
+        """
+        text = re.sub(r'\s+', ' ', text.strip())  # Elimina espacios adicionales
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')  # Elimina tildes
+        return text.title()  # Convierte el texto a formato título
 
     def __str__(self):
-        return f"{self.salario_minimo.cargo} "
+        return f"{self.salario_minimo.cargo} " if self.salario_minimo else "Sin cargo asignado"
 
 
 # Modelo para Rubros de Construcción
