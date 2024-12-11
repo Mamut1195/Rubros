@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 import re
 from unidecode import unidecode
+from datetime import date
 
 class SRIFactura(models.Model):
     ruc = models.CharField(max_length=13, verbose_name="RUC", blank=False, null=False)
@@ -9,6 +10,7 @@ class SRIFactura(models.Model):
     numero_autorizacion = models.CharField(max_length=255, unique=True, verbose_name="Número de Autorización", blank=False, null=False)
     nombre = models.CharField(max_length=255, verbose_name="Nombre", blank=False, null=False)
     nombre_comercial = models.CharField(max_length=255, verbose_name="Nombre Comercial", blank=False, null=False, default='')
+    fecha = models.DateField(verbose_name='Fecha de emisión de la factura', default=date.today)
 
     class Meta:
         verbose_name = "Factura SRI"

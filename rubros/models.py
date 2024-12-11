@@ -46,11 +46,14 @@ class Unidad(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.nombre}"
+
 # Modelo para Materiales
 class Material(models.Model):
     nombre = models.CharField(max_length=255)
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True)
-    costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, editable=True, verbose_name="Costo unitario", default=0.00)
+    costo_por_unidad = models.DecimalField(max_digits=10, decimal_places=2, editable=True, verbose_name="Costo unitario planificado", default=0.00)
 
     class Meta:
         verbose_name = "Material"
@@ -86,7 +89,7 @@ class Herramienta(models.Model):
 
     class Meta:
         verbose_name = "Herramienta"
-        verbose_name_plural = "Herramientas"
+        verbose_name_plural = "Herramientas y Equipos"
         ordering = ['nombre']
 
     def clean(self):
@@ -119,6 +122,10 @@ class ManoObra(models.Model):
     cargo = models.CharField(max_length=15, blank=True, null=True)
     salario_minimo = models.ForeignKey(SalarioMinimo, on_delete=models.SET_NULL, null=True)
     numero_de_contacto = models.CharField(max_length=15, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Mano de obra"
+        verbose_name_plural = "Mano de obra"
 
 
     def clean(self):

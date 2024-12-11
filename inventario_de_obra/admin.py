@@ -2,7 +2,7 @@
 # inventario_de_obra/admin.py
 
 from django.contrib import admin
-from .models import Inventario, EntradaInventario, SalidaInventario, Proveedor, Factura
+from .models import Inventario, EntradaInventario, SalidaInventario
 from rubros.models import Material
 from django.db import models
 
@@ -20,26 +20,14 @@ from django.db import models
 #     readonly_fields = ('fecha',)
 #     fields = ('fecha', 'cantidad', 'descripcion')
 
-# Admin para Proveedor
-@admin.register(Proveedor)
-class ProveedorAdmin(admin.ModelAdmin):
-    list_display = ('nombre_comercial', 'ruc', 'direccion')
-    search_fields = ('nombre_comercial', 'ruc')
-
-# Admin para Factura
-@admin.register(Factura)
-class FacturaAdmin(admin.ModelAdmin):
-    list_display = ('numero', 'proveedor', 'fecha_emision', 'monto_total')
-    list_filter = ('proveedor', 'fecha_emision')
-    search_fields = ('numero', 'proveedor__nombre_comercial')
 
 # Registro de los modelos EntradaInventario y SalidaInventario para ver el historial completo
 @admin.register(EntradaInventario)
 class EntradaInventarioAdmin(admin.ModelAdmin):
-    list_display = ('material', 'proveedor', 'factura', 'fecha', 'cantidad', 'descripcion')
-    list_filter = ('proveedor', 'factura', 'material')
+    list_display = ('material', 'factura', 'cantidad', 'descripcion', 'fecha')
+    list_filter = ( 'factura', 'material')
     search_fields = ('material__nombre', 'proveedor__nombre_comercial', 'factura__numero')
-    readonly_fields = ('fecha','get_unidad',)
+    readonly_fields = ('get_unidad',)
 
 
     # Método para mostrar la unidad en el listado
@@ -61,7 +49,7 @@ class EntradaInventarioAdmin(admin.ModelAdmin):
 
 @admin.register(SalidaInventario)
 class SalidaInventarioAdmin(admin.ModelAdmin):
-    list_display = ('material', 'fecha', 'cantidad', 'get_unidad', 'descripcion')
+    list_display = ('material', 'cantidad', 'get_unidad', 'descripcion')
     list_filter = ('material',)
     search_fields = ('material__nombre', 'descripcion')
     readonly_fields = ('fecha','get_unidad',)

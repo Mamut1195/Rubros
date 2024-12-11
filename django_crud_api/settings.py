@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rubros',
-    'inventario_de_obra'
+    'inventario_de_obra',
+    'control_de_personal',
+    'contabilidad'
 ]
 
 MIDDLEWARE = [
