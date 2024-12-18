@@ -80,8 +80,8 @@ class ManoObraAdmin(admin.ModelAdmin):
 class RubroMaterialInline(admin.TabularInline):
     model = RubroMaterial
     extra = 1
-    fields = ('material', 'cantidad_requerida', 'costo_unitario', 'costo_total')
-    readonly_fields = ('costo_unitario', 'costo_total')
+    readonly_fields = ('unidad', 'costo_unitario', 'costo_total')  # Hacer 'unidad' de solo lectura
+    fields = ('material', 'cantidad_requerida', 'unidad', 'costo_unitario', 'costo_total')  # Orden de los campos
 
     # Método para obtener el valor de la propiedad costo_unitario
     def costo_unitario(self, obj):
@@ -90,6 +90,11 @@ class RubroMaterialInline(admin.TabularInline):
     # Método para obtener el valor del costo total (cantidad * costo unitario)
     def costo_total(self, obj):
         return obj.costo_total
+    
+    # Método para obtener el valor de unidad en el inline
+    def unidad(self, obj):
+        return obj.material.unidad.abreviatura 
+    unidad.short_description = 'Unidad'
     
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -106,30 +111,27 @@ class RubroMaterialInline(admin.TabularInline):
 class RubroHerramientaInline(admin.TabularInline):
     model = RubroHerramienta
     extra = 1
-    fields = ('herramienta', 'cantidad_requerida', 'costo_unitario', 'costo_total')
-    readonly_fields = ('costo_unitario', 'costo_total')
+    fields = ('herramienta','costo_horario','rendimiento', 'cantidad_requerida',  'subtotal',)
+    readonly_fields = ('subtotal', 'costo_horario',)
 
-    # Método para obtener el valor de la propiedad costo_unitario
-    def costo_unitario(self, obj):
-        return obj.costo_unitario
 
     # Método para obtener el valor del costo total (cantidad * costo unitario)
-    def costo_total(self, obj):
+    def subtotal(self, obj):
         return obj.costo_total
+    
+    def costo_horario(self, obj):
+        return obj.herramienta.costo_por_unidad
+    costo_horario.short_description = 'Costo horario'
 
 # Inline para RubroManoObra
 class RubroManoObraInline(admin.TabularInline):
     model = RubroManoObra
     extra = 1
-    fields = ('mano_obra', 'cantidad_horas_requeridas', 'costo_unitario', 'costo_total')
-    readonly_fields = ('costo_unitario', 'costo_total')
-
-    # Método para obtener el valor de la propiedad costo_unitario
-    def costo_unitario(self, obj):
-        return obj.costo_unitario
+    fields = ('mano_obra', 'cantidad', 'rendimiento', 'subtotal')
+    readonly_fields = ('subtotal',)
 
     # Método para obtener el valor del costo total (cantidad de horas * costo unitario)
-    def costo_total(self, obj):
+    def subtotal(self, obj):
         return obj.costo_total
     
 

@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Crea un elemento para mostrar la suma subtotal
     const subtotalRow = document.createElement("div");
-    subtotalRow.textContent = `Subtotal del Rubro: ${sumaSubTotal.toFixed(2)}`; // Mostrar con dos decimales
+    subtotalRow.textContent = `Subtotal APU: ${sumaSubTotal.toFixed(2)}`; // Mostrar con dos decimales
     subtotalRow.style.textAlign = "right";
     subtotalRow.style.marginRight = "10em";
     subtotalRow.style.padding = "15px"; // Añade relleno dentro del box
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function() {
     subtotalRow.style.borderColor = '#121939d9';
 
     const totalRow = document.createElement("div");
-    totalRow.textContent = `Total del Rubro: ${totalRubro.toFixed(2)}`; // Mostrar con dos decimales
+    totalRow.textContent = `Total APU: ${totalRubro.toFixed(2)}`; // Mostrar con dos decimales
     totalRow.style.fontWeight = "bold";
     totalRow.style.textAlign = "right";
     totalRow.style.marginRight = "10em";

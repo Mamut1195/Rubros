@@ -4,7 +4,6 @@ import re
 from unidecode import unidecode 
 import unicodedata
 
-# Modelo para Salarios Mínimos por Ley
 class SalarioMinimo(models.Model):
     cargo = models.CharField(max_length=255)  # Nombre del cargo (ej. Albañil, Electricista)
     salario_horario_minimo = models.DecimalField(max_digits=10, decimal_places=2)  # Salario mínimo por hora
@@ -12,6 +11,29 @@ class SalarioMinimo(models.Model):
     class Meta:
         verbose_name = "Salario minimo"
         verbose_name_plural = "Salarios minimos"
+        ordering = ['cargo']  # Ordenar por cargo
+
+    def clean(self):
+        # Normalizar y limpiar el texto del cargo
+        self.cargo = self._normalize_text(self.cargo)
+
+        # Validar unicidad del cargo normalizado
+        if SalarioMinimo.objects.exclude(id=self.id).filter(cargo__iexact=self.cargo).exists():
+            raise ValidationError({'cargo': 'Ya existe un salario mínimo para este cargo.'})
+
+    def save(self, *args, **kwargs):
+        # Llama a clean antes de guardar para aplicar validaciones
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def _normalize_text(self, text):
+        """
+        Normaliza un texto eliminando tildes, espacios adicionales
+        y convirtiéndolo a formato título.
+        """
+        text = re.sub(r'\s+', ' ', text.strip())  # Elimina espacios adicionales
+        text = unidecode(text)  # Elimina tildes
+        return text.title()  # Convierte a formato título
 
     def __str__(self):
         return f"{self.cargo} - {self.salario_horario_minimo} por hora"
@@ -190,7 +212,7 @@ class RubroMaterial(models.Model):
     rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
-
+    
     @property
     def costo_unitario(self):
         return self.material.costo_por_unidad
@@ -198,31 +220,42 @@ class RubroMaterial(models.Model):
     @property
     def costo_total(self):
         return self.cantidad_requerida * self.material.costo_por_unidad
+    
+    @property
+    def unidad(self):
+        return self.material.unidad.abreviatura
 
 # Modelo intermedio para calcular costos de herramientas en el rubro
 class RubroHerramienta(models.Model):
     rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
     herramienta = models.ForeignKey(Herramienta, on_delete=models.CASCADE)
-    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad')
+    cantidad_requerida = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Cantidad', default=1)
+    rendimiento = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Rendiemiento unidad/hora', default=1)
 
-    @property
-    def costo_unitario(self):
-        return self.herramienta.costo_por_unidad
+    class Meta:
+        verbose_name = "Herramientas y Equipos"
+        verbose_name_plural = "Herramientas y Equipos"
     
     @property
     def costo_total(self):
-        return self.cantidad_requerida * self.herramienta.costo_por_unidad
+        return  self.cantidad_requerida * (self.herramienta.costo_por_unidad / self.rendimiento )
+    
+    
+    @property
+    def costo_horario(self):
+        return self.herramienta.costo_por_unidad
 
 # Modelo intermedio para calcular costos de mano de obra en el rubro
 class RubroManoObra(models.Model):
     rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE)
     mano_obra = models.ForeignKey(ManoObra, on_delete=models.CASCADE)
-    cantidad_horas_requeridas = models.DecimalField(max_digits=10, decimal_places=2)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=2)
+    rendimiento = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Rendiemiento unidad/hora', default=1)
 
-    @property
-    def costo_unitario(self):
-        return self.mano_obra.salario_minimo.salario_horario_minimo
+    class Meta:
+        verbose_name = "Mano de obra"
+        verbose_name_plural = "Mano de obra"
     
     @property
     def costo_total(self):
-        return self.cantidad_horas_requeridas * self.costo_unitario
+        return  self.cantidad * (self.mano_obra.salario_minimo.salario_horario_minimo / self.rendimiento )
