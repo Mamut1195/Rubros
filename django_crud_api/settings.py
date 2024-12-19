@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'rubros',
     'inventario_de_obra',
     'control_de_personal',
-    'contabilidad'
+    'contabilidad',
+    'seguimiento_de_obra'
 ]
 
 MIDDLEWARE = [
